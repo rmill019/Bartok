@@ -53,15 +53,82 @@ public class CardBartok : Card {
 		{
 			timeStart = Time.time;
 		}
+
+		// timeDuration always starts the same but can be altered later
+		timeDuration = MOVE_DURATION;
+
+		// Setting state to either toHand or toTarget will be handled by the calling method
+		state = CBState.to;
 	}
 
-	// Use this for initialization
-	void Start () {
-		
+	// This overload of MoveTo doewsn't require a rotation argument
+	public void MoveTo (Vector3 ePos)
+	{
+		MoveTo (ePos, Quaternion.identity);
 	}
 	
 	// Update is called once per frame
 	void Update () {
+		switch (state) 
+		{
+		// All the to__ states are ones where the card is interpolating
+		case CBState.toHand:
+		case CBState.toTarget:
+		case CBState.to:
+			// Get u from the current time and duration
+			// u ranges from 0 to 1 (usually)
+			float u = (Time.time - timeStart) / timeDuration;
+
+			// Use Easing class from Utils to curve the u value
+			float uC = Easing.Ease (u, MOVE_EASING);
+
+			if (u < 0) {
+				// Stay at the initial position
+				transform.localPosition = bezierPts [0];
+				transform.rotation = bezierRots [0];
+				return;
+			} 
+			else if (u >= 1) 
+			{
+				// If u >= 1, we're finished moving
+				uC = 1; // Set uC = 1 so that we don't overshoot
+				// Move from the to__ state to the following state
+				if (state == CBState.toHand)
+					state = CBState.hand;
+				if (state == CBState.toTarget)
+					state = CBState.toTarget;
+				if (state == CBState.to)
+					state = CBState.idle;
+				// Move to the final position
+				transform.localPosition = bezierPts [bezierPts.Count - 1];
+				transform.rotation = bezierRots [bezierRots.Count - 1];
+				// Reset timeStart to 0 so it gets overwritten next time
+				timeStart = 0;
+
+				if (reportFinishTo != null) {
+					// Then use SendMessage to call the CBCallback method
+					// with this as the parameter
+					reportFinishTo.SendMessage ("CBCallback", this);
+					// After calling SendMessage(), reportFinishTo must be set to null so that
+					// if the card doesn't continue to report to the same GameObject every subsequent time it moves.
+					reportFinishTo = null;
+				} 
+				else 
+				{  // If there is nothing else to callback
+					// Do nothing
+				}
+			} 
+			else // 0 <= u < 1, which means that this is interpolating  now 
+			{
+				// Use Bezier curve to move this to the right point
+				Vector3 pos = Utils.Bezier (uC, bezierPts);
+				transform.localPosition = pos;
+				Quaternion rotQ = Utils.Bezier (uC, bezierRots);
+				transform.rotation = rotQ;
+				
+			}
+			break;
+		}
 		
 	}
 }
