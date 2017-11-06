@@ -30,8 +30,18 @@ public class CardBartok : Card {
 	public float 				timeStart;
 	public float 				timeDuration;
 
+	public int 					eventualSortOrder;
+	public string 				eventualSortLayer;
+
 	// When the card is done moving it will call reportFinishTo.SendMessage()
 	public GameObject			reportFinishTo = null;
+	public Player 				callbackPlayer = null;
+
+
+	void Awake ()
+	{
+		callbackPlayer = null;	// Just to be sure;
+	}
 
 	// MoveTo tells the card to interpolate to a new position and rotation
 	public void MoveTo (Vector3 ePos, Quaternion eRot)
@@ -105,17 +115,24 @@ public class CardBartok : Card {
 				// Reset timeStart to 0 so it gets overwritten next time
 				timeStart = 0;
 
-				if (reportFinishTo != null) {
+				if (reportFinishTo != null)
+				{
 					// Then use SendMessage to call the CBCallback method
 					// with this as the parameter
 					reportFinishTo.SendMessage ("CBCallback", this);
 					// After calling SendMessage(), reportFinishTo must be set to null so that
 					// if the card doesn't continue to report to the same GameObject every subsequent time it moves.
 					reportFinishTo = null;
-				} 
-				else 
-				{  // If there is nothing else to callback
-					// Do nothing
+				}
+				else if (callbackPlayer != null)
+				{
+					// If there's a callback Player then call CBCallback directly on the Player
+					callbackPlayer.CBCallback (this);
+					callbackPlayer = null;
+				}
+				else // If there is nothing to callback
+				{
+					// Just let it stay still
 				}
 			} 
 			else // 0 <= u < 1, which means that this is interpolating  now 
@@ -125,10 +142,30 @@ public class CardBartok : Card {
 				transform.localPosition = pos;
 				Quaternion rotQ = Utils.Bezier (uC, bezierRots);
 				transform.rotation = rotQ;
-				
+
+				if (u > 0.5f && spriteRenderers [0].sortingOrder != eventualSortOrder)
+				{
+					// Jump to the proper sort order
+					SetSortOrder (eventualSortOrder);
+				}
+
+				if (u > 0.75f && spriteRenderers [0].sortingLayerName != eventualSortLayer)
+				{
+					// Jump to the proper sort layer
+					SetSortingLayerName (eventualSortLayer);
+				}
 			}
 			break;
 		}
-		
+	}
+
+
+	// This allows the card to react to being clicked
+	override public void OnMouseUpAsButton ()
+	{
+		// Call the CardClicked method on the Bartok singleton
+		Bartok.S.CardClicked (this);
+		// also call the base class (Card.cs) version of this method
+		base.OnMouseUpAsButton ();
 	}
 }

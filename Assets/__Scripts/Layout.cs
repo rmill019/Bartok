@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //The SlotDef class is not a subclass of MonoBehavior, so it doesn't need a seperate C# file
-[System.Serializable]//This makes SlotDefs visible in the Unity Inspector pane
-public class SlotDef{
-	public float 		x;
-	public float		y;
-	public bool 		faceUp = false;
-	public string 		layerName = "Default";
-	public int 			layerID = 0;
-	public int 			id;
-	public List<int> 	hiddenBy = new List<int> ();
-	public string 		type = "slot";
-	public Vector2 		stagger;
-}
+//[System.Serializable]//This makes SlotDefs visible in the Unity Inspector pane
+//public class SlotDef{
+//	public float 		x;
+//	public float		y;
+//	public bool 		faceUp = false;
+//	public string 		layerName = "Default";
+//	public int 			layerID = 0;
+//	public int 			id;
+//	public List<int> 	hiddenBy = new List<int> ();
+//	public string 		type = "slot";
+//	public Vector2 		stagger;
+//}
 
 
 public class Layout : MonoBehaviour {
@@ -57,11 +57,11 @@ public class Layout : MonoBehaviour {
 			//Various attributes are parsed into numerical values
 			tSD.x = float.Parse(slotsX[i].att("x"));
 			tSD.y = float.Parse(slotsX[i].att("y"));
-			tSD.layerID = int.Parse (slotsX [i].att ("layer"));
+			//tSD.layerID = int.Parse (slotsX [i].att ("layer"));
 			//This converts the number of the layerID into a text layerName
 				//The layerName field of SlotDef is used to make sure that the correct cards are on top of the others. 
 				//In Unity2D all assets are effectively at the same Z depth, so the layer is used to differentiate between them and determine which appears on top.
-			tSD.layerName = sortingLayerNames[tSD.layerID];
+			//tSD.layerName = sortingLayerNames[tSD.layerID];
 			switch (tSD.type) {
 				//pull additional attributes based on the type of this <slot>
 				case "slot":
